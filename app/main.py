@@ -103,3 +103,40 @@ async def add_group(data: GroupSchema, session: SessionDep):
     return JSONResponse({"id": group.id,
                          "parent_id": group.parent_id,
                          "name": group.name})
+
+
+@app.get("/groups/{group_id}", response_model=GroupSchema)
+async def get_group(group_id: int, session: SessionDep):
+    query = select(GroupModel).where(GroupModel.id == group_id)
+    result = await session.execute(query)
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    logger.info("Fetched group with id=%d", group.id)
+    return {"id": group.id, "parent_id": group.parent_id, "name": group.name}
+
+
+@app.delete("/groups/{group_id}")
+async def delete_group(group_id: int, session: SessionDep):
+    query = delete(GroupModel).where(GroupModel.id == group_id)
+    result = await session.execute(query)
+    await session.commit()
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+    logger.info("Deleted group with id=%d", group_id)
+    return JSONResponse({"message": "deleted"})
+
+
+@app.put("/groups/{group_id}", response_model=GroupSchema)
+async def put_group(group_id: int, data: GroupSchema, session: SessionDep):
+    query = update(GroupModel).where(GroupModel.id == group_id).values(
+        name=data.name,
+        parent_id=data.parent_id
+    )
+    result = await session.execute(query)
+    await session.commit()
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    logger.info("Updated group with id=%d", group_id)
+    return {"id": group_id, "parent_id": data.parent_id, "name": data.name}
