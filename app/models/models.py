@@ -1,40 +1,25 @@
 from sqlalchemy import (
-    Column, Integer, String, Float, ForeignKey, DateTime
+    Column, Integer, String, ForeignKey
 )
 from app.database.database import Base
-from datetime import datetime
 from sqlalchemy.orm import relationship
 
 
-class UserModel(Base):
-    __tablename__ = 'users'
+class GroupModel(Base):
+    __tablename__ = 'groups'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
 
-    devices = relationship("DeviceModel", back_populates="user")
+    parent_id = Column(Integer, ForeignKey('devices.id'))
+    sub_groups = relationship("Group")
 
 
-class DeviceModel(Base):
+class StudentModel(Base):
     __tablename__ = 'devices'
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    email = Column(String)
 
-    user = relationship("UserModel", back_populates="devices")
-    statistics = relationship("DeviceStatisticModel", back_populates="device")
-
-
-class DeviceStatisticModel(Base):
-    __tablename__ = 'device_statistics'
-
-    id = Column(Integer, primary_key=True)
-    device_id = Column(Integer, ForeignKey('devices.id'), nullable=False)
-
-    device = relationship("DeviceModel", back_populates="statistics")
-
-    x = Column(Float, nullable=False)
-    y = Column(Float, nullable=False)
-    z = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    group_id = Column(Integer, ForeignKey('groups.id'))
